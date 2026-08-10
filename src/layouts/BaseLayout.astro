@@ -37,6 +37,7 @@ const hasVisibleWriting = (await getCollection('writing', ({ data }) => !data.dr
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title={`${siteContent.profile.name} — ${siteContent.navigation.writing}`} href="/rss.xml" />
@@ -58,6 +59,7 @@ const hasVisibleWriting = (await getCollection('writing', ({ data }) => !data.dr
       '@type': 'Person',
       name: siteContent.profile.name,
       url: siteContent.profile.websiteUrl,
+      image: new URL(siteContent.profile.portrait, siteContent.profile.websiteUrl),
       email: `mailto:${siteContent.profile.email}`,
       sameAs: [siteContent.profile.scholar, siteContent.profile.github],
       jobTitle: siteContent.profile.role,
