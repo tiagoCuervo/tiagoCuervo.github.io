@@ -1,0 +1,89 @@
+---
+import '../styles/global.css';
+import { getCollection } from 'astro:content';
+import Background from '../components/Background.astro';
+import { siteContent } from '../data/site-content';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  article?: boolean;
+  published?: Date;
+  updated?: Date;
+  tags?: string[];
+}
+
+const {
+  title = siteContent.metadata.title,
+  description = siteContent.metadata.description,
+  image = '/og.png',
+  article = false,
+  published,
+  updated,
+  tags = [],
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, siteContent.profile.websiteUrl);
+const imageUrl = new URL(image, siteContent.profile.websiteUrl);
+const path = Astro.url.pathname;
+const navCurrent = (href: string) => href === '/' ? path === '/' : path.startsWith(href);
+const hasVisibleWriting = (await getCollection('writing', ({ data }) => !data.draft)).length > 0;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${siteContent.profile.name} — ${siteContent.navigation.writing}`} href="/rss.xml" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={imageUrl} />
+    {published && <meta property="article:published_time" content={published.toISOString()} />}
+    {updated && <meta property="article:modified_time" content={updated.toISOString()} />}
+    {tags.map((tag) => <meta property="article:tag" content={tag} />)}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageUrl} />
+    <title>{title}</title>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: siteContent.profile.name,
+      url: siteContent.profile.websiteUrl,
+      email: `mailto:${siteContent.profile.email}`,
+      sameAs: [siteContent.profile.scholar, siteContent.profile.github],
+      jobTitle: siteContent.profile.role,
+      affiliation: { '@type': 'Organization', name: siteContent.profile.affiliation },
+      knowsAbout: siteContent.metadata.knowsAbout,
+    })}></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <Background />
+    <div class="site-shell">
+      <header class="site-header">
+        {path !== '/' && <a class="site-name" href="/">{siteContent.profile.name}</a>}
+        <nav class="site-nav" aria-label="Primary navigation">
+          {hasVisibleWriting && <a href="/writing/" aria-current={navCurrent('/writing/') ? 'page' : undefined}>{siteContent.navigation.writing}</a>}
+          <a href="/publications/" aria-current={navCurrent('/publications/') ? 'page' : undefined}>{siteContent.navigation.publications}</a>
+          <a href={siteContent.profile.cvUrl}>{siteContent.navigation.cv}</a>
+        </nav>
+      </header>
+      <main id="content" class="site-main">
+        <slot />
+      </main>
+      <footer class="site-footer">
+        <span>© {new Date().getFullYear()} {siteContent.profile.name}</span>
+        <span>{siteContent.footer.tagline}</span>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+---
+import type { Publication } from '../data/publications';
+import { siteContent } from '../data/site-content';
+const { publication, compact = false } = Astro.props as { publication: Publication; compact?: boolean };
+const authorParts = publication.authors.map((author) => ({ name: author, self: author === siteContent.profile.name }));
+---
+
+<article class={compact ? 'compact-publication' : 'publication-card'}>
+  {!compact && publication.image && (
+    <>
+      <button class="publication-image-button" type="button" data-lightbox-open aria-label={`Expand figure for ${publication.title}`}>
+        <img class="publication-image" src={publication.image} alt={`Figure from ${publication.title}`} loading="lazy" />
+      </button>
+      <dialog class="publication-lightbox" data-lightbox aria-label={`Expanded figure from ${publication.title}`}>
+        <form method="dialog">
+          <button class="publication-lightbox-close" value="close" aria-label="Close expanded figure">×</button>
+        </form>
+        <img src={publication.image} alt={`Figure from ${publication.title}`} />
+      </dialog>
+    </>
+  )}
+  <div>
+    <div class="card-meta">{publication.venue} · {publication.year}{publication.note && <span class="publication-note"> · {publication.note}</span>}</div>
+    <h3><a href={publication.url}>{publication.title}</a></h3>
+    <p class="publication-authors">
+      {authorParts.map((author, index) => <>{author.self ? <strong>{author.name}</strong> : author.name}{index < authorParts.length - 1 ? ', ' : ''}</>)}
+    </p>
+    {!compact && <p class="publication-summary">{publication.summary}</p>}
+  </div>
+</article>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-lightbox-open]').forEach((button) => {
+    if (button.dataset.lightboxReady === 'true') return;
+    button.dataset.lightboxReady = 'true';
+    button.addEventListener('click', () => {
+      button.closest('article')?.querySelector<HTMLDialogElement>('[data-lightbox]')?.showModal();
+    });
+  });
+
+  document.querySelectorAll<HTMLDialogElement>('[data-lightbox]').forEach((dialog) => {
+    if (dialog.dataset.lightboxReady === 'true') return;
+    dialog.dataset.lightboxReady = 'true';
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  });
+</script>

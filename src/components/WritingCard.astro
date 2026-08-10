@@ -1,0 +1,13 @@
+---
+import type { CollectionEntry } from 'astro:content';
+const { post, featured = false } = Astro.props as { post: CollectionEntry<'writing'>; featured?: boolean };
+const href = `/writing/${post.id}/`;
+const date = post.data.published.toLocaleDateString('en', { month: 'long', year: 'numeric' });
+---
+
+<article class={featured ? 'writing-feature' : 'writing-card'}>
+  <time datetime={post.data.published.toISOString()}>{date}</time>
+  {featured ? <h3><a href={href}>{post.data.title}</a></h3> : <h2><a href={href}>{post.data.title}</a></h2>}
+  <p>{post.data.description}</p>
+  <div class="tag-list">{post.data.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
+</article>

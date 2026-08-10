@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { siteContent } from '../../data/site-content';
+---
+
+<BaseLayout title={`CV — ${siteContent.profile.name}`} description={`Curriculum vitae of ${siteContent.profile.name}.`}>
+  <section class="page-intro cv-page">
+    <p class="eyebrow">Curriculum</p>
+    <p><a class="text-link" href="/downloads/santiago-cuervo-cv.pdf" download>Download PDF →</a></p>
+    <div class="cv-frame">
+      <object data="/downloads/santiago-cuervo-cv.pdf" type="application/pdf" aria-label={`${siteContent.profile.name} curriculum vitae`}>
+        <p>Your browser cannot display the PDF inline. <a href="/downloads/santiago-cuervo-cv.pdf">Open the CV PDF</a>.</p>
+      </object>
+    </div>
+  </section>
+</BaseLayout>

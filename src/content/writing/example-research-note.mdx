@@ -1,0 +1,40 @@
+---
+title: "Thoughts on Multimodality after a PhD on Speech LLMs"
+description: "A dummy article demonstrating the writing system, editorial components, and publication controls."
+published: 2026-08-05
+tags:
+  - example
+  - research note
+# Visibility switch: true hides this post everywhere; false publishes it.
+draft: true
+toc: true
+---
+
+import Callout from '../../components/editorial/Callout.astro';
+import Sidenote from '../../components/editorial/Sidenote.astro';
+
+This is a deliberately short example article. Replace its title, description,
+date, tags, and body with a real research note when you are ready to publish.
+
+## A compact argument
+
+Begin with the question the note addresses, explain why it matters, and state
+the central claim early. The surrounding layout is designed for long-form
+technical writing without making a short note feel sparse.
+
+<Callout title="Main idea">
+  Callouts isolate the one statement a reader should carry into the next section.
+</Callout>
+
+## Evidence and interpretation
+
+Use ordinary Markdown for prose, lists, links, equations, and code. Figures can
+be added with the reusable `Figure` component shown in `_template.mdx`.
+
+<Sidenote>
+  Sidenotes hold useful context that would otherwise interrupt the argument.
+</Sidenote>
+
+Set `draft: false` in the frontmatter when the article is ready. It will then
+appear automatically on the homepage, writing index, RSS feed, sitemap, and its
+own public route.

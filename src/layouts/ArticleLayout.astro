@@ -1,0 +1,36 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import type { CollectionEntry } from 'astro:content';
+import { siteContent } from '../data/site-content';
+
+type Heading = { depth: number; slug: string; text: string };
+const { post, headings } = Astro.props as { post: CollectionEntry<'writing'>; headings: Heading[] };
+const published = post.data.published.toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' });
+const updated = post.data.updated?.toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<BaseLayout
+  title={`${post.data.title} — ${siteContent.profile.name}`}
+  description={post.data.description}
+  image={post.data.hero}
+  article
+  published={post.data.published}
+  updated={post.data.updated}
+  tags={post.data.tags}
+>
+  <article class="article-shell">
+    <header class="article-header">
+      <p class="eyebrow">{siteContent.writingPage.articleEyebrow}</p>
+      <h1>{post.data.title}</h1>
+      <p class="article-description">{post.data.description}</p>
+      <div class="article-meta">
+        <span>By {siteContent.profile.name}</span>
+        <time datetime={post.data.published.toISOString()}>{published}</time>
+        {updated && <span>Updated {updated}</span>}
+      </div>
+    </header>
+    <div class="prose"><slot /></div>
+    {post.data.toc && <TableOfContents headings={headings} />}
+  </article>
+</BaseLayout>

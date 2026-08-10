@@ -1,0 +1,286 @@
+---
+interface Props {
+  backgroundStrength?: number;
+  slope?: number;
+  offsetX?: number;
+  offsetY?: number;
+  curveCount?: number;
+  clustering?: number;
+  clusterCompactness?: number;
+  fullCurves?: boolean;
+  postParetoLength?: number;
+  opacityProfile?: boolean;
+  initialOpacity?: number;
+  middleOpacity?: number;
+  finalOpacity?: number;
+  paretoFadeStart?: number;
+  paretoOpacity?: number;
+  curveOpacityGradient?: boolean;
+  firstCurveOpacity?: number;
+  lastCurveOpacity?: number;
+  initialSlope?: number;
+  cycleSeconds?: number;
+}
+
+const {
+  backgroundStrength = 7,
+  slope = 1,
+  offsetX = 0,
+  offsetY = 0,
+  curveCount = 44,
+  clustering = 1,
+  clusterCompactness = 0.3111,
+  fullCurves = true,
+  postParetoLength = 1,
+  opacityProfile = true,
+  initialOpacity = 0.55,
+  middleOpacity = 0.8,
+  finalOpacity = 0.25,
+  paretoFadeStart = 0.52,
+  paretoOpacity = 0.28,
+  curveOpacityGradient = true,
+  firstCurveOpacity = 0.45,
+  lastCurveOpacity = 1,
+  initialSlope = 0.1667,
+  cycleSeconds = 75,
+} = Astro.props;
+---
+
+<canvas
+  class="background-canvas scaling-canvas"
+  data-scaling-curves
+  data-background-strength={backgroundStrength}
+  data-power-law-slope={slope}
+  data-plot-offset-x={offsetX}
+  data-plot-offset-y={offsetY}
+  data-curve-count={curveCount}
+  data-trajectory-clustering={clustering}
+  data-cluster-compactness={clusterCompactness}
+  data-full-curves={fullCurves}
+  data-post-pareto-length={postParetoLength}
+  data-opacity-profile={opacityProfile}
+  data-initial-opacity={initialOpacity}
+  data-middle-opacity={middleOpacity}
+  data-final-opacity={finalOpacity}
+  data-pareto-fade-start={paretoFadeStart}
+  data-pareto-opacity={paretoOpacity}
+  data-curve-opacity-gradient={curveOpacityGradient}
+  data-first-curve-opacity={firstCurveOpacity}
+  data-last-curve-opacity={lastCurveOpacity}
+  data-initial-slope={initialSlope}
+  data-cycle-seconds={cycleSeconds}
+  aria-hidden="true"
+></canvas>
+
+<script>
+  type Point = { x: number; y: number };
+  type Cubic = [Point, Point, Point, Point];
+
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-scaling-curves]');
+
+  if (canvas && canvas.dataset.initialized !== 'true') {
+    canvas.dataset.initialized = 'true';
+    const context = canvas.getContext('2d');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const number = (key: string, fallback: number) => Number(canvas.dataset[key] ?? fallback);
+    const flag = (key: string, fallback: boolean) => (canvas.dataset[key] ?? String(fallback)) === 'true';
+
+    const backgroundStrength = Math.max(0, number('backgroundStrength', 7)) / 100;
+    const powerLawSlope = Math.max(0, Math.min(1.5, number('powerLawSlope', 1)));
+    const plotOffsetX = number('plotOffsetX', 0) / 100;
+    const plotOffsetY = number('plotOffsetY', 0) / 100;
+    const maximumCurves = Math.max(1, Math.round(number('curveCount', 44)));
+    const clustering = Math.max(0, Math.min(1, number('trajectoryClustering', 1)));
+    const clusterCompactness = Math.max(0, Math.min(1, number('clusterCompactness', 0.3111)));
+    const fullCurves = flag('fullCurves', true);
+    const postParetoLength = Math.max(0, number('postParetoLength', 1));
+    const opacityProfile = flag('opacityProfile', true);
+    const initialOpacity = Math.max(0, number('initialOpacity', 0.55));
+    const middleOpacity = Math.max(0, number('middleOpacity', 0.8));
+    const finalOpacity = Math.max(0, number('finalOpacity', 0.25));
+    const paretoFadeStart = Math.max(0, Math.min(.99, number('paretoFadeStart', 0.52)));
+    const paretoOpacity = Math.max(0, number('paretoOpacity', 0.28));
+    const curveOpacityGradient = flag('curveOpacityGradient', true);
+    const firstCurveOpacity = Math.max(0, number('firstCurveOpacity', 0.45));
+    const lastCurveOpacity = Math.max(0, number('lastCurveOpacity', 1));
+    const initialSlope = Math.max(0, number('initialSlope', 0.1667));
+    const cycleDuration = Math.max(1, number('cycleSeconds', 75)) * 1000;
+    const curveDuration = cycleDuration / maximumCurves;
+
+    let width = 0;
+    let height = 0;
+    let animationId = 0;
+    let cycleStartedAt = 0;
+    let hiddenAt = 0;
+
+    const resize = () => {
+      const ratio = Math.min(devicePixelRatio || 1, 1.5);
+      width = innerWidth;
+      height = innerHeight;
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      context?.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+
+    const mix = (a: Point, b: Point, amount: number): Point => ({
+      x: a.x + (b.x - a.x) * amount,
+      y: a.y + (b.y - a.y) * amount,
+    });
+
+    const cubicPoint = ([a, b, c, d]: Cubic, t: number): Point => {
+      const ab = mix(a, b, t);
+      const bc = mix(b, c, t);
+      const cd = mix(c, d, t);
+      return mix(mix(ab, bc, t), mix(bc, cd, t), t);
+    };
+
+    const modelIndexFor = (order: number) => {
+      const group = Math.floor(order / 6);
+      const withinClusterStep = 1 - .9 * clusterCompactness;
+      const clusteredIndex = withinClusterStep * order + .26 * group * group;
+      return (1 - clustering) * order + clustering * clusteredIndex;
+    };
+
+    const curveSegments = (order: number): Cubic[] => {
+      const modelIndex = modelIndexFor(order);
+      const scale = modelIndex / 43;
+      const frontier = Math.pow(Math.max(0, scale), .72);
+      const xStart = -9 + 74 * scale;
+      const yStart = 309;
+      const xUpper = 12 + 88 * scale;
+      const yUpper = 266;
+      const xKnee = 25 + 105 * scale;
+      const yKnee = 190 - 12 * scale;
+      const xTail = 75 + 84 * scale;
+      const yTail = 112 - 32 * powerLawSlope * frontier;
+      const xFullEnd = 145 + 78 * scale;
+      const yFullEnd = 91 - 55 * powerLawSlope * frontier;
+      const xEnd = xTail + postParetoLength * (xFullEnd - xTail);
+      const yEnd = yTail + postParetoLength * (yFullEnd - yTail);
+      const tailDx = xEnd - xTail;
+      const tailDy = yEnd - yTail;
+      const tailHandleScale = Math.min(1, postParetoLength);
+      const p = (x: number, y: number): Point => ({
+        x: width * (x / 210 + plotOffsetX),
+        y: height * (1 - y / 297 + plotOffsetY),
+      });
+
+      const segments: Cubic[] = [
+        [p(xStart, yStart), p(xStart + 12, yStart - 12 * initialSlope), p(xUpper - 10, yUpper + 18), p(xUpper, yUpper)],
+        [p(xUpper, yUpper), p(xUpper + 10, yUpper - 30), p(xKnee - 8, yKnee + 22), p(xKnee, yKnee)],
+        [p(xKnee, yKnee), p(xKnee + 14, yKnee - 30), p(xTail - 15, yTail + 10), p(xTail, yTail)],
+      ];
+      if (fullCurves) {
+        segments.push([
+          p(xTail, yTail),
+          p(xTail + 15 * tailHandleScale, yTail - 10 * tailHandleScale),
+          p(xEnd - .25 * tailDx, yEnd - .19 * tailDy),
+          p(xEnd, yEnd),
+        ]);
+      }
+      return segments;
+    };
+
+    const spatialOpacity = (progress: number) => {
+      if (!opacityProfile) return 1;
+      if (progress <= .5) {
+        const t = progress * 2;
+        return initialOpacity + (middleOpacity - initialOpacity) * (1 - Math.pow(1 - t, 2));
+      }
+      const t = (progress - .5) * 2;
+      return middleOpacity + (finalOpacity - middleOpacity) * t * t;
+    };
+
+    const convergenceOpacity = (progress: number, segmentCount: number) => {
+      const paretoProgress = fullCurves ? 3 / segmentCount : 1;
+      if (progress <= paretoFadeStart || paretoProgress <= paretoFadeStart) return 1;
+      const t = Math.min(1, (progress - paretoFadeStart) / (paretoProgress - paretoFadeStart));
+      const smooth = t * t * (3 - 2 * t);
+      return 1 + (paretoOpacity - 1) * smooth;
+    };
+
+    const strokeCurve = (order: number, visibleProgress: number) => {
+      if (!context || visibleProgress <= 0) return;
+      const segments = curveSegments(order);
+      // Dense sampling keeps the opacity field visually continuous. Butt caps
+      // prevent adjacent micro-strokes from darkening where their ends overlap.
+      const samples = Math.max(96, segments.length * 48);
+      const visibleSamples = Math.max(1, Math.ceil(samples * visibleProgress));
+      const scale = modelIndexFor(order) / 43;
+      const legacyScaleFactor = Math.max(.45, 1.34 - .62 * scale);
+      const orderProgress = maximumCurves <= 1 ? 1 : order / (maximumCurves - 1);
+      const orderOpacity = curveOpacityGradient
+        ? firstCurveOpacity + (lastCurveOpacity - firstCurveOpacity) * orderProgress
+        : legacyScaleFactor;
+
+      for (let sample = 0; sample < visibleSamples; sample += 1) {
+        const fromProgress = sample / samples;
+        const toProgress = Math.min(visibleProgress, (sample + 1) / samples);
+        const segmentPositionA = fromProgress * segments.length;
+        const segmentPositionB = toProgress * segments.length;
+        const segmentIndexA = Math.min(segments.length - 1, Math.floor(segmentPositionA));
+        const segmentIndexB = Math.min(segments.length - 1, Math.floor(segmentPositionB));
+        const from = cubicPoint(segments[segmentIndexA], segmentPositionA - segmentIndexA);
+        const to = cubicPoint(segments[segmentIndexB], segmentPositionB - segmentIndexB);
+        const progress = (fromProgress + toProgress) / 2;
+        const alpha = Math.min(1, backgroundStrength * orderOpacity * spatialOpacity(progress) * convergenceOpacity(progress, segments.length));
+        context.beginPath();
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
+        context.strokeStyle = `rgba(40, 37, 31, ${alpha})`;
+        context.lineWidth = width < 700 ? .72 : .9;
+        context.lineCap = 'butt';
+        context.lineJoin = 'round';
+        context.stroke();
+      }
+    };
+
+    const drawStaticFrame = () => {
+      if (!context) return;
+      context.clearRect(0, 0, width, height);
+      for (let order = 0; order < maximumCurves; order += 1) strokeCurve(order, 1);
+    };
+
+    const draw = (time: number) => {
+      if (!context || reducedMotion.matches || document.hidden) return;
+      if (cycleStartedAt === 0) cycleStartedAt = time;
+      const elapsed = (time - cycleStartedAt) % cycleDuration;
+      if (time - cycleStartedAt >= cycleDuration) cycleStartedAt = time - elapsed;
+      context.clearRect(0, 0, width, height);
+
+      for (let order = 0; order < maximumCurves; order += 1) {
+        const start = order * curveDuration;
+        const progress = Math.max(0, Math.min(1, (elapsed - start) / curveDuration));
+        if (progress > 0) strokeCurve(order, progress);
+      }
+      animationId = requestAnimationFrame(draw);
+    };
+
+    const restart = () => {
+      cancelAnimationFrame(animationId);
+      if (reducedMotion.matches) drawStaticFrame();
+      else if (!document.hidden) animationId = requestAnimationFrame(draw);
+    };
+
+    resize();
+    restart();
+    addEventListener('resize', () => { resize(); restart(); }, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        hiddenAt = performance.now();
+        cancelAnimationFrame(animationId);
+      } else {
+        if (hiddenAt && cycleStartedAt) cycleStartedAt += performance.now() - hiddenAt;
+        hiddenAt = 0;
+        restart();
+      }
+    });
+    reducedMotion.addEventListener('change', restart);
+  }
+</script>
+
+<style>
+  .scaling-canvas { opacity: 1; }
+</style>

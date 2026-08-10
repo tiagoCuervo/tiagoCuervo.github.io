@@ -1,0 +1,30 @@
+---
+import { siteConfig } from '../config/site';
+import TransformerStream from '../animations/transformer-stream/TransformerStream.astro';
+import ScalingCurves from '../animations/scaling-curves/ScalingCurves.astro';
+---
+
+{siteConfig.backgroundVariant === 'scaling-curves'
+  ? <ScalingCurves
+      backgroundStrength={siteConfig.scalingBackgroundStrength}
+      slope={siteConfig.scalingPowerLawSlope}
+      offsetX={siteConfig.scalingPlotOffsetX}
+      offsetY={siteConfig.scalingPlotOffsetY}
+      curveCount={siteConfig.scalingCurveCount}
+      clustering={siteConfig.scalingTrajectoryClustering}
+      clusterCompactness={siteConfig.scalingClusterCompactness}
+      fullCurves={siteConfig.scalingFullCurves}
+      postParetoLength={siteConfig.scalingPostParetoLength}
+      opacityProfile={siteConfig.scalingOpacityProfile}
+      initialOpacity={siteConfig.scalingInitialOpacityFactor}
+      middleOpacity={siteConfig.scalingMiddleOpacityFactor}
+      finalOpacity={siteConfig.scalingFinalOpacityFactor}
+      paretoFadeStart={siteConfig.scalingParetoFadeStart}
+      paretoOpacity={siteConfig.scalingParetoOpacityFactor}
+      curveOpacityGradient={siteConfig.scalingCurveOpacityGradient}
+      firstCurveOpacity={siteConfig.scalingFirstCurveOpacityFactor}
+      lastCurveOpacity={siteConfig.scalingLastCurveOpacityFactor}
+      initialSlope={siteConfig.scalingInitialSlope}
+      cycleSeconds={siteConfig.scalingCycleSeconds}
+    />
+  : <TransformerStream />}

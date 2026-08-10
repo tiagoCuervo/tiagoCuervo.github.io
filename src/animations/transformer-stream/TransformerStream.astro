@@ -1,0 +1,75 @@
+<canvas class="background-canvas" data-transformer-stream aria-hidden="true"></canvas>
+
+<script>
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-transformer-stream]');
+  if (canvas) {
+    const context = canvas.getContext('2d');
+    const media = matchMedia('(prefers-reduced-motion: reduce)');
+    const colors = ['156,88,74', '113,129,116', '189,149,81'];
+    let width = 0;
+    let height = 0;
+    let animationId = 0;
+
+    const resize = () => {
+      const ratio = Math.min(devicePixelRatio || 1, 1.5);
+      width = innerWidth;
+      height = innerHeight;
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      context?.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+
+    const draw = (time = 0) => {
+      if (!context) return;
+      context.clearRect(0, 0, width, height);
+      const reduced = media.matches;
+      const t = reduced ? 0.35 : time * 0.00012;
+      const layers = width < 700 ? 4 : 7;
+      const startX = width * 0.08;
+      const endX = width * 1.03;
+      const center = height * 0.54;
+
+      context.lineWidth = 0.65;
+      for (let layer = 0; layer < layers; layer += 1) {
+        const x = width * (0.43 + layer * (0.48 / Math.max(1, layers - 1)));
+        const layerHeight = height * (0.24 + layer * 0.025);
+        context.strokeStyle = 'rgba(40,37,31,.075)';
+        context.strokeRect(x, center - layerHeight / 2, Math.max(12, width * 0.017), layerHeight);
+      }
+
+      const traces = width < 700 ? 18 : 32;
+      for (let i = 0; i < traces; i += 1) {
+        const phase = i * 0.79 + t * (i % 3 + 1);
+        const offset = (i - traces / 2) * Math.min(11, height / 60);
+        const color = colors[i % colors.length];
+        context.beginPath();
+        for (let step = 0; step <= 90; step += 1) {
+          const p = step / 90;
+          const x = startX + (endX - startX) * p;
+          const mixing = Math.max(0, (p - 0.28) / 0.72);
+          const residual = Math.sin(p * Math.PI * (2.4 + (i % 5) * .18) + phase) * (10 + 27 * mixing);
+          const fine = Math.sin(p * 18 + phase * 1.7) * 4 * mixing;
+          const y = center + offset * (1 - .38 * mixing) + residual + fine;
+          if (step === 0) context.moveTo(x, y); else context.lineTo(x, y);
+        }
+        context.strokeStyle = `rgba(${color},${0.055 + (i % 4) * 0.009})`;
+        context.lineWidth = i % 7 === 0 ? 1.05 : 0.68;
+        context.stroke();
+      }
+
+      if (!reduced && !document.hidden) animationId = requestAnimationFrame(draw);
+    };
+
+    const restart = () => {
+      cancelAnimationFrame(animationId);
+      draw(performance.now());
+    };
+    resize();
+    restart();
+    addEventListener('resize', () => { resize(); restart(); }, { passive: true });
+    document.addEventListener('visibilitychange', restart);
+    media.addEventListener('change', restart);
+  }
+</script>

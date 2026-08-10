@@ -1,0 +1,71 @@
+---
+title: "The Road to Her"
+description: "Thoughts on the path from current voice AI to passing the Spoken Turing Test."
+published: 2026-08-05
+tags:
+  - speech language models
+  - scaling laws
+  - multimodal learning
+  - research perspective
+draft: true
+hero: /og.png
+toc: true
+---
+
+import Callout from '../../components/editorial/Callout.astro';
+import Figure from '../../components/editorial/Figure.astro';
+import Sidenote from '../../components/editorial/Sidenote.astro';
+
+Text made language modeling look deceptively simple. Break a sentence into discrete symbols, ask a model to predict the next one, and improvements emerge with more data, more parameters, and more computation. Speech contains the same linguistic structure, but it does not arrive as a clean symbol sequence. It arrives entangled with speaker identity, room acoustics, emotion, pronunciation, timing, and noise.
+
+This difference matters. If we want models that understand language as people actually use it, we need to know which lessons from text transfer cleanly to speech—and which do not.
+
+<Callout title="The central claim">
+  Scale is necessary, but the path from acoustic variation to linguistic abstraction determines how efficiently that scale can be used.
+</Callout>
+
+## A harder interface to language
+
+A text token already represents a substantial act of abstraction. The shapes of letters, the sound of a voice, and most local timing have been removed before the model sees anything. A speech model must learn some of those invariances for itself while preserving distinctions that alter meaning.
+
+Modern systems often handle this by converting audio into learned discrete units and then training a language model over those units. The design is appealing: once speech looks like a sequence, familiar modeling machinery can be applied. Yet the choice of units quietly determines the length of that sequence, the ambiguity of each symbol, and the amount of nuisance variation left for the model to explain.
+
+<Sidenote>
+  A representation is not merely a compression format. It defines the learning problem presented to every model above it.
+</Sidenote>
+
+My early work explored this bottom-up problem directly. Variable-rate hierarchical predictive models can discover speech units while deciding *when* a new unit is warranted, rather than imposing a rigid frame rate. Linguistic feedback helps lower-level representations preserve information useful for higher-level prediction. This creates a useful principle: compression should be shaped by what the rest of the system needs to understand.
+
+<Figure src="/images/papers/variable-rate-cpc.png" alt="Diagram from the variable-rate hierarchical CPC study" caption="Hierarchical objectives connect local acoustic learning to longer-range linguistic structure." />
+
+## What scaling reveals
+
+If speech language models are trained at different compute budgets, their losses follow regular trends. A compact description is a power law approaching an irreducible floor:
+
+$$
+L(C) \approx L_\infty + A C^{-\alpha}.
+$$
+
+The regularity is important because it makes extrapolation and resource allocation possible. But the comparison with text also exposes a problem: models trained over common speech units require markedly more computation to reach comparable predictive performance. Larger models help, yet they do not erase the representational tax.
+
+<Figure src="/images/papers/scaling-speech-lms.png" alt="Scaling trends for speech language models" caption="Speech language modeling improves predictably with compute, while the representation determines the efficiency of that improvement." />
+
+This changes the interpretation of a scaling curve. A smooth curve is evidence that the system is learnable, not proof that its interface is efficient. When two tokenizations produce similar asymptotic trends at very different costs, the difference is not cosmetic. It is a clue about what the model is being forced to spend capacity on.
+
+## From bottom-up learning to top-down transfer
+
+There is another route. Instead of asking a speech system to rediscover all linguistic knowledge from audio, we can begin with a strong text language model and adapt it to speech. The question becomes architectural: where should perceptual information enter a network whose layers were optimized for symbolic input, and how should new speech behavior be learned without destroying existing capabilities?
+
+Language models do not process information uniformly across depth. Their layers repeatedly abstract and refine representations. A multimodal adapter should respect that dynamic rather than treat every layer as interchangeable. In our work, accounting for these layerwise roles improved both speech understanding and generation.
+
+<Figure src="/images/papers/layerwise-adaptation.png" alt="Layerwise multimodal adaptation architecture" caption="Multimodal adaptation benefits from matching the evolving role of representations across model depth." />
+
+Architecture alone is not enough. During adaptation, a model can become better at speech while forgetting skills it acquired from text. Cross-modal distillation provides a direct bridge: the text model acts as a teacher for paired or related speech inputs. Active data selection then concentrates training on examples where that bridge is most informative.
+
+<Figure src="/images/papers/cross-modal-distillation.png" alt="Cross-modal distillation and active selection framework" caption="Text supervision and targeted data selection narrow the speech–text understanding gap while limiting forgetting." />
+
+## The useful tension
+
+The bottom-up and top-down views are not competing stories. Bottom-up work asks what structure can be learned from the signal and how it should be represented. Top-down work asks how mature linguistic knowledge can guide perception. Progress comes from keeping both questions visible.
+
+The next generation of speech language models will likely combine efficient, semantically shaped acoustic representations with selective transfer from powerful text and multimodal models. Scaling will remain part of the answer. The more interesting challenge is to construct a learning interface on which scale can do the right work.

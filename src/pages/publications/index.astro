@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PublicationCard from '../../components/PublicationCard.astro';
+import { publications } from '../../data/publications';
+import { siteContent } from '../../data/site-content';
+
+const years = [...new Set(publications.map((publication) => publication.year))].sort((a, b) => b - a);
+---
+
+<BaseLayout title={`${siteContent.publicationsPage.title} — ${siteContent.profile.name}`} description={siteContent.publicationsPage.description}>
+  <header class="page-intro">
+    <p class="eyebrow">{siteContent.publicationsPage.eyebrow}</p>
+    <h1>{siteContent.publicationsPage.title}</h1>
+    <p class="lede">{siteContent.publicationsPage.introduction}</p>
+  </header>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': publications.map((publication) => ({
+      '@type': 'ScholarlyArticle',
+      headline: publication.title,
+      author: publication.authors.map((name) => ({ '@type': 'Person', name })),
+      datePublished: String(publication.year),
+      isPartOf: { '@type': 'Periodical', name: publication.venue },
+      url: publication.url,
+      description: publication.summary,
+    })),
+  })}></script>
+  {years.map((year) => (
+    <section aria-labelledby={`year-${year}`}>
+      <h2 class="year-heading" id={`year-${year}`}>{year}</h2>
+      {publications.filter((publication) => publication.year === year).map((publication) => (
+        <PublicationCard publication={publication} compact />
+      ))}
+    </section>
+  ))}
+</BaseLayout>

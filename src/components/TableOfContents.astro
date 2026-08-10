@@ -1,0 +1,14 @@
+---
+type Heading = { depth: number; slug: string; text: string };
+const { headings } = Astro.props as { headings: Heading[] };
+const visible = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+{visible.length > 0 && (
+  <nav class="toc" aria-label="Article contents">
+    <p class="toc-title">Contents</p>
+    <ol>
+      {visible.map((heading) => <li style={`margin-left:${Math.max(0, heading.depth - 2) * .8}rem`}><a href={`#${heading.slug}`}>{heading.text}</a></li>)}
+    </ol>
+  </nav>
+)}

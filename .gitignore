@@ -5,6 +5,10 @@ dist/
 
 # dependencies
 node_modules/
+dist/
+.astro/
+.DS_Store
+npm-debug.log*
 
 # logs
 npm-debug.log*

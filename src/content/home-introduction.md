@@ -1,0 +1,5 @@
+I am a final-year PhD student at the University of Toulon, supervised by [Prof. Ricard Marxer](https://scholar.google.pl/citations?user=EloO3uwAAAAJ&hl=en). I previously interned at [Apple Machine Learning Research](https://machinelearning.apple.com/) and with [Prof. Jan Chorowski](https://scholar.google.com/citations?hl=en&user=Yc94070AAAAJ) at the University of Wrocław.
+
+My doctoral research aims to bridge the capability gap between text- and speech-based LLMs. My published work spans self-supervised representation learning, models of human speech perception, scaling laws, and multimodal adaptation. For my bachelor’s thesis, I worked on decentralized cooperation in multi-agent deep reinforcement learning.
+
+I aim to continue pushing the frontier of speech LLM capabilities and naturalness to increase the bandwidth of human–AI collaboration, and to extend what I learn about transferring capabilities from text to speech to other modalities. Beyond this core agenda, I am also beginning to explore other research interests, including semantic sparsity and modularity in LLMs and potential scaling axes for multi-agent world models.
