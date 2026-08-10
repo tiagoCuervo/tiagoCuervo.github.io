@@ -13,7 +13,7 @@ export const siteContent = {
     github: 'https://github.com/tiagoCuervo',
     websiteUrl: 'https://tiagocuervo.github.io',
     cvUrl: '/cv/',
-    portrait: '/images/santiago-cuervo-v3.png',
+    portrait: '/images/santiago-cuervo-upright.png',
     portraitAlt: 'Portrait of Santiago Cuervo',
   },
 
