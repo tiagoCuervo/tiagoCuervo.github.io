@@ -99,6 +99,10 @@ h3 { margin: 0; font-size: 1.08rem; font-weight: 600; letter-spacing: -.008em; }
 .publication-card h3 a:hover, .compact-publication h3 a:hover { color: var(--terracotta-dark); }
 .publication-authors { margin: .3rem 0; color: var(--muted); font-size: .86rem; line-height: 1.42; }
 .publication-authors strong { color: var(--ink); font-weight: 600; }
+.publication-links { display: flex; flex-wrap: wrap; gap: .35rem .85rem; margin: .4rem 0 0; font-family: var(--sans); font-size: .72rem; font-weight: 600; letter-spacing: .025em; }
+.publication-links a { color: var(--terracotta-dark); text-decoration: none; }
+.publication-links a:hover { color: var(--terracotta); }
+.publication-links a + a::before { content: '·'; margin-right: .85rem; color: var(--rule); }
 .publication-summary { margin: .4rem 0 0; max-width: 680px; font-size: .91rem; }
 .publication-note { color: var(--terracotta-dark); }
 .compact-publication { padding: .9rem 0 1rem; border-bottom: 1px solid rgba(215, 205, 191, .7); }

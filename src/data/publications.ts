@@ -5,6 +5,7 @@ export type Publication = {
   venue: string;
   year: number;
   url: string;
+  codeUrl?: string;
   summary: string;
   image?: string;
   selected?: boolean;
@@ -40,6 +41,7 @@ export const publications: Publication[] = [
     venue: 'Conference on Language Modeling (COLM)',
     year: 2026,
     url: 'https://colm.eventhosts.cc/Conferences/2026/AcceptedPapers',
+    codeUrl: 'https://github.com/tiagoCuervo/interleaved_lm',
     summary: 'Studied how layerwise abstraction and refinement govern cross-modal transfer, then introduced LF²AR: late fusion, late fission, and attention residuals matched to those dynamics. The architecture outperforms substantially larger baselines and supports 1.9× faster generation through adaptive depth.',
     image: '/images/papers/lf2ar-architecture.png',
     selected: true,
@@ -52,6 +54,7 @@ export const publications: Publication[] = [
     venue: 'Conference on Empirical Methods in Natural Language Processing (EMNLP)',
     year: 2024,
     url: 'https://aclanthology.org/2024.emnlp-main.21/',
+    codeUrl: 'https://github.com/tiagoCuervo/slm_scaling',
     summary: 'Characterized the scaling of generative speech language models, relating loss to linguistic capabilities while isolating the effects of data distribution and tokenization. Speech models scale predictably, but remain markedly less efficient than text models.',
     image: '/images/papers/scaling-speech-lms.png',
     selected: true,

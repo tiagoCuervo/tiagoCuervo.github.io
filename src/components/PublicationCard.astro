@@ -25,6 +25,10 @@ const authorParts = publication.authors.map((author) => ({ name: author, self: a
     <p class="publication-authors">
       {authorParts.map((author, index) => <>{author.self ? <strong>{author.name}</strong> : author.name}{index < authorParts.length - 1 ? ', ' : ''}</>)}
     </p>
+    <div class="publication-links" aria-label={`Links for ${publication.title}`}>
+      <a href={publication.url}>Paper <span aria-hidden="true">↗</span></a>
+      {publication.codeUrl && <a href={publication.codeUrl}>Code <span aria-hidden="true">↗</span></a>}
+    </div>
     {!compact && <p class="publication-summary">{publication.summary}</p>}
   </div>
 </article>

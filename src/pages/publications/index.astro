@@ -22,6 +22,7 @@ const years = [...new Set(publications.map((publication) => publication.year))].
       datePublished: String(publication.year),
       isPartOf: { '@type': 'Periodical', name: publication.venue },
       url: publication.url,
+      ...(publication.codeUrl ? { codeRepository: publication.codeUrl } : {}),
       description: publication.summary,
     })),
   })}></script>
