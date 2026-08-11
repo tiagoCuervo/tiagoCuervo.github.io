@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tiagocuervo.github.io/sitemap-index.xml
+Sitemap: https://tiagocuervo.github.io/sitemap.xml
